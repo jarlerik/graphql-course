@@ -1,0 +1,2 @@
+endpoint: http://localhost:4466/prisma/dev
+datamodel: datamodel.graphql

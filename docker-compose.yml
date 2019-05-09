@@ -1,0 +1,50 @@
+version: '3'
+services:
+
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - pgnet
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "80:80"
+    networks:
+      - pgnet
+    environment:
+      PGADMIN_DEFAULT_EMAIL: example@mail.com
+      PGADMIN_DEFAULT_PASSWORD: password
+
+  prisma:
+    image: prismagraphql/prisma:1.12
+    restart: always
+    ports:
+    - "4466:4466"
+    networks:
+      - pgnet
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
+        # managementApiSecret: my-secret
+        databases:
+          default:
+            connector: postgres
+            host: hoosee.local
+            port: '5432'
+            database: postgres
+            schema: schema.graphql
+            user: postgres
+            password: password
+            migrations: true
+  
+networks:
+  pgnet:
+    driver: overlay
