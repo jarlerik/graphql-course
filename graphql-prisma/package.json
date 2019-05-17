@@ -18,10 +18,14 @@
   },
   "scripts": {
     "start": "nodemon ./src/index.js --ext js,graphql --exec babel-node",
-    "get-schema": "graphql get-schema -p prisma"
+    "get-schema": "graphql get-schema -p prisma",
+    "lint": "eslint ./src"
   },
   "devDependencies": {
     "babel-plugin-transform-object-rest-spread": "6.26.0",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.2",
     "nodemon": "^1.19.0"
   }
 }

@@ -68,7 +68,7 @@ type Query {
   type User {
       id: ID!
       name: String!
-      email: String!
+      email: String
       password: String!
       posts: [Post!]!
       comments: [Comment!]
@@ -104,3 +104,14 @@ type Query {
       mutation: MutationType!
       node: Comment
   }
+
+fragment userDetails on User {
+  id
+  name
+}
+
+fragment userPost on Post {
+  id
+  title
+  published
+}
