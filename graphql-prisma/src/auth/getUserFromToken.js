@@ -2,7 +2,9 @@ import jwt from 'jsonwebtoken'
 import JWT_TOKEN_SECRET from './jwt_secret'
 
 export default function getUserFromToken(request, authRequired = true) {
-  const header = request.request.headers.authorization
+  const header = request.request
+    ? request.request.headers.authorization
+    : request.connection.context.Authorization
 
   if (header) {
     const token = header.replace('Bearer ', '')

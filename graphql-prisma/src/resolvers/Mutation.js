@@ -1,9 +1,8 @@
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
 import connect from '../helpers/connect'
 import getUserFromToken from '../auth/getUserFromToken'
-import getUserForToken from '../auth/getUserForToken'
-import JWT_TOKEN_SECRET from '../auth/jwt_secret'
+import generateJwtToken from '../auth/generateJwtToken'
+import hashPassword from '../auth/hashPassword'
 
 const Mutation = {
 
@@ -27,17 +26,13 @@ const Mutation = {
     }
     return {
       user,
-      token: jwt.sign(getUserForToken(user), JWT_TOKEN_SECRET),
+      token: generateJwtToken(user),
     }
   },
   async createUser(parent, args, { prisma }) {
     const { password } = args.data
 
-    if (password.length < 8) {
-      throw new Error('Must be 8 characters or longer.')
-    }
-    const hashedPassword = await bcrypt.hash(password, 10)
-
+    const hashedPassword = await hashPassword(password)
 
     const user = await prisma.mutation.createUser({
       data: {
@@ -48,14 +43,20 @@ const Mutation = {
 
     return {
       user,
-      token: jwt.sign(getUserForToken(user), JWT_TOKEN_SECRET),
+      token: generateJwtToken(user),
     }
   },
   async updateUser(parent, args, { prisma, request }, info) {
     const user = getUserFromToken(request)
 
+    const updateUserData = { ...args.data }
+
+    if (typeof args.data.password === 'string') {
+      updateUserData.password = await hashPassword(args.data.password)
+    }
+
     return prisma.mutation.updateUser({
-      data: args.data,
+      data: updateUserData,
       where: {
         id: user.id,
       },
@@ -67,32 +68,51 @@ const Mutation = {
       where: { id: user.id },
     })
   },
-  async createPost(parent, args, { prisma, request }) {
+  async createPost(parent, args, { prisma, request }, info) {
     const user = getUserFromToken(request)
+
     const { data } = args
 
     const post = {
       title: data.title,
       body: data.body,
-      published: data.body,
-      author: connect(user.id),
+      published: data.published,
+      author: {
+        connect: {
+          id: user.id,
+        },
+      },
     }
 
-    return prisma.mutation.createPost({ data: post })
+    const createdPost = await prisma.mutation.createPost({ data: post }, info)
+    return createdPost
   },
 
   async updatePost(parent, args, { prisma, request }, info) {
     const { id, data } = args
     const user = getUserFromToken(request)
 
-    const postExists = await prisma.exists.Post({
-      id,
-      author: {
-        id: user.id,
+    const post = await prisma.query.posts({
+      where: {
+        id,
+        author: {
+          id: user.id,
+        },
       },
     })
-    if (!postExists) {
+    if (!post) {
       throw Error('Unable to update post.')
+    }
+
+    // Unpublishing post - remove comments
+    if (post.published && !data.published) {
+      await prisma.mutation.deleteManyComments({
+        where: {
+          post: {
+            id,
+          },
+        },
+      }, info)
     }
 
     return prisma.mutation.updatePost({
@@ -127,12 +147,22 @@ const Mutation = {
     const { data } = args
     const author = getUserFromToken(request)
 
+    const postExists = await prisma.exists.Post({
+      id: data.post,
+      published: true,
+    })
+
+    if (!postExists) {
+      throw new Error('Unable to comment on post.')
+    }
     const comment = {
       text: data.text,
       author: connect(author.id),
       post: connect(data.post),
     }
-    return prisma.mutation.createComment({ data: comment }, info)
+    return prisma.mutation.createComment({
+      data: comment,
+    }, info)
   },
 
   async updateComment(parent, args, { prisma, request }) {

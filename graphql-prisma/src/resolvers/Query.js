@@ -30,9 +30,14 @@ const Query = {
   async myPosts(parent, args, { prisma, request }, info) {
     const user = getUserFromToken(request)
 
-    const { query } = args
+    const {
+      query, first, skip, after,
+    } = args
 
     const opArgs = {
+      first,
+      skip,
+      after,
       where: {
         author: {
           id: user.id,
@@ -76,11 +81,17 @@ const Query = {
     return posts[0]
   },
   posts(parent, args, { prisma }, info) {
-    const { query } = args
+    const {
+      query, first, skip, after, orderBy,
+    } = args
     const opArgs = {
+      orderBy,
       where: {
         published: true,
       },
+      first,
+      skip,
+      after,
     }
 
     if (query) {
@@ -92,7 +103,14 @@ const Query = {
     return prisma.query.posts(opArgs, info)
   },
   async comments(parent, args, { prisma }, info) {
-    return prisma.query.comments(null, info)
+    const { first, skip, after } = args
+
+    const opArgs = {
+      first,
+      skip,
+      after,
+    }
+    return prisma.query.comments(opArgs, info)
   },
 
 }
