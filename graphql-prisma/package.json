@@ -5,9 +5,11 @@
   "author": "Jarl-Erik Malmström",
   "license": "MIT",
   "dependencies": {
+    "@babel/polyfill": "^7.4.4",
     "babel-cli": "6.26.0",
     "babel-preset-env": "1.7.0",
     "bcryptjs": "^2.4.3",
+    "env-cmd": "^9.0.1",
     "graphql-cli": "2.16.4",
     "graphql-import": "^0.7.1",
     "graphql-yoga": "1.16.7",
@@ -18,7 +20,9 @@
     "graphql": "^0.13.1"
   },
   "scripts": {
-    "start": "nodemon ./src/index.js --ext js,graphql --exec babel-node",
+    "start": "env-cmd -f ./config/prod.env node dist/index.js",
+    "heroku-postbuild": "babel src --out-dir dist --copy-files",
+    "dev": "env-cmd -f ./config/dev.env nodemon ./src/index.js --ext js,graphql --exec babel-node",
     "get-schema": "graphql get-schema -p prisma",
     "lint": "eslint ./src",
     "prisma-dev-deploy": "cd prisma && prisma deploy -e ../config/dev.env",

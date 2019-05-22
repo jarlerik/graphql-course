@@ -1,3 +1,4 @@
+import '@babel/polyfill'
 import { GraphQLServer, PubSub } from 'graphql-yoga'
 import { resolvers, fragmentReplacements } from './resolvers/index'
 import prisma from './prisma'
@@ -28,5 +29,10 @@ const server = new GraphQLServer({
     }
   },
 })
-// eslint-disable-next-line no-console
-server.start(() => console.log('Server is running on localhost:4000'))
+
+const port = process.env.PORT || 4000
+server.start({ port },
+  () => {
+    // eslint-disable-next-line no-console
+    console.log(`Server is running on localhost:${port}`)
+  })
