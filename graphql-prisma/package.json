@@ -20,7 +20,9 @@
   "scripts": {
     "start": "nodemon ./src/index.js --ext js,graphql --exec babel-node",
     "get-schema": "graphql get-schema -p prisma",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src",
+    "prisma-dev-deploy": "cd prisma && prisma deploy -e ../config/dev.env",
+    "prisma-prod-deploy": "cd prisma && prisma deploy -e ../config/prod.env "
   },
   "devDependencies": {
     "babel-plugin-transform-object-rest-spread": "6.26.0",
